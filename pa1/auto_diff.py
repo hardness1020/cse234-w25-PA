@@ -299,7 +299,12 @@ class OnesLikeOp(Op):
         return [zeros_like(node.inputs[0])]
 
 class SumOp(Op):
-    """Op to compute sum along specified dimensions."""
+    """
+    Op to compute sum along specified dimensions.
+    
+    Note: This is a reference implementation for SumOp.
+        If it does not work in your case, you can modify it.
+    """
 
     def __call__(self, node_A: Node, dim: tuple, keepdim: bool = False) -> Node:
         return Node(
@@ -314,7 +319,85 @@ class SumOp(Op):
         return input_values[0].sum(dim=node.dim, keepdim=node.keepdim)
 
     def gradient(self, node: Node, output_grad: Node) -> List[Node]:
-        return [output_grad]
+        dim = node.attrs['dim']
+        keepdim = node.attrs["keepdim"]
+
+        if keepdim:
+            return [output_grad]
+        else:
+            reshape_grad = expand_as_3d(output_grad, node.inputs[0])
+            return [reshape_grad]
+
+class ExpandAsOp(Op):
+    """Op to broadcast a tensor to the shape of another tensor.
+    
+    Note: This is a reference implementation for ExpandAsOp.
+        If it does not work in your case, you can modify it.
+    """
+
+    def __call__(self, node_A: Node, node_B: Node) -> Node:
+        return Node(
+            inputs=[node_A, node_B],
+            op=self,
+            name=f"broadcast({node_A.name} -> {node_B.name})",
+        )
+
+    def compute(self, node: Node, input_values: List[torch.Tensor]) -> torch.Tensor:
+        """Return the broadcasted tensor."""
+        assert len(input_values) == 2
+        input_tensor, target_tensor = input_values
+        return input_tensor.expand_as(target_tensor)
+
+    def gradient(self, node: Node, output_grad: Node) -> List[Node]:
+        """Given the gradient of the broadcast node, compute partial adjoint to input."""
+        
+        return [sum_op(output_grad,dim=0), zeros_like(output_grad)]
+    
+class ExpandAsOp3d(Op):
+    """Op to broadcast a tensor to the shape of another tensor.
+    
+    Note: This is a reference implementation for ExpandAsOp3d.
+        If it does not work in your case, you can modify it.
+    """
+
+    def __call__(self, node_A: Node, node_B: Node) -> Node:
+        return Node(
+            inputs=[node_A, node_B],
+            op=self,
+            name=f"broadcast({node_A.name} -> {node_B.name})",
+        )
+
+    def compute(self, node: Node, input_values: List[torch.Tensor]) -> torch.Tensor:
+        """Return the broadcasted tensor."""
+        assert len(input_values) == 2
+        input_tensor, target_tensor = input_values
+        print('expand_op',input_tensor.shape, target_tensor.shape)
+        return input_tensor.unsqueeze(1).expand_as(target_tensor)
+
+    def gradient(self, node: Node, output_grad: Node) -> List[Node]:
+        """Given the gradient of the broadcast node, compute partial adjoint to input."""
+        
+        return [sum_op(output_grad,dim=(0, 1)), zeros_like(output_grad)]
+
+class LogOp(Op):
+    """Logarithm (natural log) operation."""
+
+    def __call__(self, node_A: Node) -> Node:
+        return Node(
+            inputs=[node_A],
+            op=self,
+            name=f"Log({node_A.name})",
+        )
+
+    def compute(self, node: Node, input_values: List[torch.Tensor]) -> torch.Tensor:
+        """Return the natural logarithm of the input."""
+        assert len(input_values) == 1, "Log operation requires one input."
+        return torch.log(input_values[0])
+
+    def gradient(self, node: Node, output_grad: Node) -> List[Node]:
+        """Given the gradient of the Log node, return the partial adjoint to the input."""
+        input_node = node.inputs[0]
+        return [output_grad / input_node]
 
 
 class BroadcastOp(Op):
@@ -556,7 +639,8 @@ class PowerOp(Op):
         """TODO: your code here"""
 
 class MeanOp(Op):
-    """Op to compute mean along specified dimensions."""
+    """Op to compute mean along specified dimensions.
+    """
 
     def __call__(self, node_A: Node, dim: tuple, keepdim: bool = False) -> Node:
         return Node(
@@ -594,7 +678,11 @@ sum_op = SumOp()
 sqrt = SqrtOp()
 power = PowerOp()
 greater = GreaterThanOp()
+expand_as = ExpandAsOp()
+expand_as_3d = ExpandAsOp3d()
+log = LogOp()
 sub = SubOp()
+broadcast = BroadcastOp()
 
 def topological_sort(nodes):
     """Helper function to perform topological sort on nodes.
