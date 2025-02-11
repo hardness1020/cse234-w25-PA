@@ -1,0 +1,8 @@
+    The fusion operators combine multiple operators (e.g., addition, subtraction, multiplication, division) into a single 
+kernel to optimize workflow. The intuition includes reducing the overhead of intermediate data transfers between operations 
+and the time of kernel launching. The reason is that many computations can be executed more efficiently when grouped.
+Fusing operators reduces the overhead of launching multiple kernels, and the intermediate data is stored in the GPU
+memory, which is faster than transferring data between the CPU and GPU. The fusion operators can be implemented differently, 
+such as using a library that supports fusion operators or manually writing the code to fuse operators. Future improvements
+to these operators could include optimizing the fusion process to specific model architectures like Transformer and diffusion model,
+hardware accelerators like TPUs and GPUs, and dynamic operators during runtime.

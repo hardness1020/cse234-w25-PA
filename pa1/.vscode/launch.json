@@ -1,0 +1,25 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+
+        {
+            "name": "Python Debugger: pytest",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/tests/test_fused_ops.py",
+            "args": ["-m", "pytest"],
+            "console": "integratedTerminal"
+        },
+
+        {
+            "name": "Transformer",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/transformer.py",
+            "console": "integratedTerminal"
+        }
+    ]
+}
